@@ -57,6 +57,9 @@ extern "C" {
     #include "platform/lf_zephyr_support.h"
 #elif defined(PLATFORM_NRF52)
     #include "platform/lf_nrf52_support.h"
+#elif defined(PLATFORM_SOLID)
+    // SOLID
+    #include "platform/lf_solid_support.h"
 #elif defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
    // Windows platforms
    #include "lf_windows_support.h"
