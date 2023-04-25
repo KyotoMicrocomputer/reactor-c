@@ -35,26 +35,22 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h> // For fixed-width integral types
 #include <time.h>   // For CLOCK_MONOTONIC
 #include <stdbool.h>
+#include <solid_cs_assert.h>
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
 #ifdef LF_THREADED
-#warning "Threaded support on Arduino is still experimental"
-
-typedef void* lf_mutex_t;
-typedef void* lf_cond_t;
-typedef void* lf_thread_t;
-
-extern lf_mutex_t mutex;
-extern lf_cond_t event_q_changed;
-
+#include <pthread.h>
+#include "lf_POSIX_threads_support.h"
 #endif // LF_THREADED
 
-#define PRINTF_TIME "%" PRIu32
+#undef assert
+#define assert(exp) solid_cs_assert(exp)
+
+#define PRINTF_TIME "%llu"
 #define PRINTF_MICROSTEP "%" PRIu32
 #define PRINTF_TAG "(" PRINTF_TIME ", " PRINTF_MICROSTEP ")"
-#define _LF_TIMEOUT 1
 
 // Arduinos are embedded platforms with no tty
 #define NO_TTY

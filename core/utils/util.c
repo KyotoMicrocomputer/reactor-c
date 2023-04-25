@@ -128,6 +128,7 @@ void _lf_message_print(
 	}
 }
 
+#ifndef PLATFORM_SOLID
 /**
  * Report an informational message on stdout with
  * a newline appended at the end.
@@ -194,6 +195,7 @@ void lf_print_debug(const char* format, ...) {
 void lf_vprint_debug(const char* format, va_list args) {
     _lf_message_print(0, "DEBUG: ", format, args, LOG_LEVEL_DEBUG);
 }
+#endif
 
 /**
  * Report an error with the prefix "ERROR: " and a newline appended
@@ -267,4 +269,3 @@ void lf_register_print_function(print_message_function_t* function, int log_leve
     print_message_function = function;
     print_message_level = log_level;
 }
-
