@@ -277,6 +277,9 @@ void tracepoint(
         interval_t extra_delay,
         bool is_interval_start
 ) {
+    if (!_lf_trace_buffer_size)
+        return;
+
     instant_t time;
     if (!is_interval_start && physical_time == NULL) {
         time = lf_time_physical();
