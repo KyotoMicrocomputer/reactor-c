@@ -35,8 +35,6 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <solid_cs_assert.h>
 #include <kernel.h>
 
-static SOLID_CRITICALSECTION_T _critical_section;
-
 // Keep track of physical actions being entered into the system
 static volatile bool _lf_async_event = false;
 
@@ -106,10 +104,6 @@ int lf_sleep(interval_t sleep_duration) {
 void lf_initialize_clock()
 {
     _nw_nsecPerTick = (double)(1000000000.0 / (double)SOLID_TIMER_GetTicksPerSec());
-
-    lf_register_print_function(printf, 255);
-
-    SOLID_InitializeCriticalSection(&_critical_section);
 }
 
 int lf_clock_gettime(instant_t* t) {
@@ -123,7 +117,14 @@ int lf_clock_gettime(instant_t* t) {
 
 #ifndef LF_THREADED
 
+static SOLID_CRITICALSECTION_T _critical_section;
+static bool _critical_section_initialized = false;
+
 int lf_critical_section_enter() {
+    if (_critical_section_initialized == false) { 
+        SOLID_InitializeCriticalSection(&_critical_section);
+        _critical_section_initialized = true;
+    }
     SOLID_EnterCriticalSection(&_critical_section);
     return 0;
 }
