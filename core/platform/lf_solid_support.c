@@ -107,6 +107,8 @@ void lf_initialize_clock()
 {
     _nw_nsecPerTick = (double)(1000000000.0 / (double)SOLID_TIMER_GetTicksPerSec());
 
+    lf_register_print_function(printf, 255);
+
     SOLID_InitializeCriticalSection(&_critical_section);
 }
 
@@ -144,10 +146,7 @@ int lf_notify_of_event() {
 }
 
 #else
-#warning "Threaded support on Arduino is still experimental"
-#include "ConditionWrapper.h"
-#include "MutexWrapper.h"
-#include "ThreadWrapper.h"
+#warning "Threaded support on SOLID is still experimental"
 
 // Typedef that represents the function pointers passed by LF runtime into lf_thread_create
 typedef void *(*lf_function_t) (void *);
@@ -156,146 +155,79 @@ typedef void *(*lf_function_t) (void *);
  * @brief Get the number of cores on the host machine.
  */
 int lf_available_cores() {
-    return 1;
+    // ToDo: Use SOLID API
+    return 2;
+}
+#endif
+
+void *calloc(size_t n, size_t size)
+{
+    void *mem = malloc(n * size);
+    if (mem)
+        memset(mem, 0, n * size);
+    return mem;
 }
 
-/**
- * Create a new thread, starting with execution of lf_thread
- * getting passed arguments. The new handle is stored in thread_id.
- *
- * @return 0 on success, platform-specific error number otherwise.
- *
- */
-int lf_thread_create(lf_thread_t* thread, void *(*lf_thread) (void *), void* arguments) {
-    lf_thread_t t = thread_new();
-    long int start = thread_start(t, *lf_thread, arguments);
-    *thread = t;
-    return start;
+int printf(const char *fmt, ...)
+{
+    char buf[1024];
+    va_list ap;
+    int ret;
+
+    va_start(ap, fmt);
+    ret = vsnprintf(buf, 1024, fmt, ap);
+    va_end(ap);
+
+    buf[ret++] = '\0';
+
+    SOLID_LOG_write(buf, ret);
+
+    return ret;
 }
 
-/**
- * Make calling thread wait for termination of the thread.  The
- * exit status of the thread is stored in thread_return, if thread_return
- * is not NULL.
- *
- * @return 0 on success, platform-specific error number otherwise.
- */
-int lf_thread_join(lf_thread_t thread, void** thread_return) {
-   return thread_join(thread, thread_return);
+void lf_print(const char *format, ...) {
+    char buf[1024];
+    va_list ap;
+
+    va_start(ap, format);
+    int ret = vsnprintf(buf, 1024, format, ap);
+    va_end(ap);
+
+    buf[ret++] = '\n';
+    buf[ret++] = '\0';
+
+    SOLID_LOG_write(buf, ret);
 }
 
-/**
- * Initialize a mutex.
- *
- * @return 0 on success, platform-specific error number otherwise.
- */
-int lf_mutex_init(lf_mutex_t* mutex) {
-    *mutex = (lf_mutex_t) mutex_new();
-    return 0;
+void lf_print_debug(const char* format, ...) {
+    char buf[1024];
+    va_list ap;
+
+    va_start(ap, format);
+    int ret = vsnprintf(buf, 1024, format, ap);
+    va_end(ap);
+
+    buf[ret++] = '\n';
+    buf[ret++] = '\0';
+
+    SOLID_LOG_write("[DEBUG] ", 8);
+    SOLID_LOG_write(buf, ret);
 }
 
-/**
- * Lock a mutex.
- *
- * @return 0 on success, platform-specific error number otherwise.
- */
-int lf_mutex_lock(lf_mutex_t* mutex) {
-    mutex_lock(*mutex);
-    return 0;
-}
+void lf_print_log(const char *format, ...)
+{
+    char buf[1024];
+    va_list ap;
 
-/**
- * Unlock a mutex.
- *
- * @return 0 on success, platform-specific error number otherwise.
- */
-int lf_mutex_unlock(lf_mutex_t* mutex) {
-    mutex_unlock(*mutex);
-    return 0;
-}
+    va_start(ap, format);
+    int ret = vsnprintf(buf, 1024, format, ap);
+    va_end(ap);
 
-/**
- * Initialize a conditional variable.
- *
- * @return 0 on success, platform-specific error number otherwise.
- */
-int lf_cond_init(lf_cond_t* cond, lf_mutex_t* mutex) {
-    *cond = (lf_cond_t) condition_new (*mutex);
-    return 0;
-}
+    buf[ret++] = '\n';
+    buf[ret++] = '\0';
 
-/**
- * Wake up all threads waiting for condition variable cond.
- *
- * @return 0 on success, platform-specific error number otherwise.
- */
-int lf_cond_broadcast(lf_cond_t* cond) {
-    condition_notify_all(*cond);
-    return 0;
-}
-
-/**
- * Wake up one thread waiting for condition variable cond.
- *
- * @return 0 on success, platform-specific error number otherwise.
- */
-int lf_cond_signal(lf_cond_t* cond) {
-    condition_notify_one(*cond);
-    return 0;
-}
-
-/**
- * Wait for condition variable "cond" to be signaled or broadcast.
- * "mutex" is assumed to be locked before.
- *
- * @return 0 on success, platform-specific error number otherwise.
- */
-int lf_cond_wait(lf_cond_t* cond) {
-    condition_wait(*cond);
-    return 0;
-}
-
-/**
- * Block current thread on the condition variable until condition variable
- * pointed by "cond" is signaled or time pointed by "absolute_time_ns" in
- * nanoseconds is reached.
- *
- * @return 0 on success, LF_TIMEOUT on timeout, and platform-specific error
- *  number otherwise.
- */
-int lf_cond_timedwait(lf_cond_t* cond, instant_t absolute_time_ns) {
-    instant_t now;
-    lf_clock_gettime(&now);
-    interval_t sleep_duration_ns = absolute_time_ns - now;
-    bool res = condition_wait_for(*cond, sleep_duration_ns);
-    if (!res) {
-        return 0;
-    } else {
-        return LF_TIMEOUT;
-    }
+    SOLID_LOG_write("[LOG] ", 6);
+    SOLID_LOG_write(buf, ret);
 }
 
 #endif
-#endif
-
-void *calloc(size_t n, size_t size) {
-	void *mem = malloc(n * size);
-	if (mem)
-		memset(mem, 0, n * size);
-	return mem;
-}
-
-int printf(const char *fmt, ...) {
-	char pbuf[1024];
-	va_list args;
-	int n;
-
-	va_start(args, fmt);
-	n = vsnprintf(pbuf, sizeof(pbuf), fmt, args);
-	va_end(args);
-	pbuf[n] = '\0';
-
-	SOLID_LOG_printf(pbuf);
-
-	return n;
-}
