@@ -221,8 +221,8 @@ void flush_trace_locked(int worker) {
                 _lf_trace_file = NULL;
             }
         }
-        _lf_trace_buffer_size[worker] = 0;
     }
+    _lf_trace_buffer_size[worker] = 0;
 }
 
 /**
