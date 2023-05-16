@@ -90,6 +90,10 @@ static int lf_mutex_init(lf_mutex_t* mutex) {
     // of the predicate.”  This seems like a bug in the implementation of
     // pthreads. Maybe it has been fixed?
     pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+#if defined(PLATFORM_SOLID)
+    // dirty hack
+    memset(mutex, 0, sizeof(struct pthread_mutexdesc));
+#endif
     return pthread_mutex_init((pthread_mutex_t*)mutex, &attr);
 }
 
