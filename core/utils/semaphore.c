@@ -98,6 +98,14 @@ void lf_semaphore_wait(semaphore_t* semaphore) {
  */
 void lf_semaphore_destroy(semaphore_t* semaphore) {
     assert(semaphore != NULL);
+#if defined(PLATFORM_SOLID)
+    // There's no `lf_mutex_destroy` nor `lf_cond_destroy` provided,
+    // so we should call `pthread` functions directly.
+    pthread_cond_destroy(&semaphore->cond.condition);
+    semaphore->cond.condition = 0;
+    semaphore->cond.mutex = NULL;
+    pthread_mutex_destroy(&semaphore->mutex);
+#endif
     free(semaphore);
 }
 #endif
