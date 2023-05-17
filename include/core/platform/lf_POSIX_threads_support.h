@@ -92,7 +92,12 @@ static int lf_mutex_init(lf_mutex_t* mutex) {
     pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 #if defined(PLATFORM_SOLID)
     // dirty hack
-    memset(mutex, 0, sizeof(struct pthread_mutexdesc));
+#if defined(PTHREAD_MUTEX_INITIALIZER_MAGIC)
+    pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER_MAGIC;
+    memcpy(mutex, &m, sizeof(pthread_mutex_t));
+#else
+    memset(mutex, 0, sizeof(pthread_mutex_t));
+#endif // defined(PTHREAD_MUTEX_INITIALIZER_MAGIC)
 #endif
     return pthread_mutex_init((pthread_mutex_t*)mutex, &attr);
 }
