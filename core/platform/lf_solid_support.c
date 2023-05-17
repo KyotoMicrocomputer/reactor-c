@@ -35,12 +35,12 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <solid_cs_assert.h>
 #include <kernel.h>
 
+#ifndef LF_THREADED
 // Keep track of physical actions being entered into the system
 static volatile bool _lf_async_event = false;
+#endif
 
 static volatile double _nw_nsecPerTick;
-
-#define DIFF_TICK(t1, t2) (((t2) >= (t1)) ? ((t2) - (t1)) : ((-1LL - (t1)) + (t2)))
 
 static void wait_nsec(uint32_t nsec) {
     uint64_t now = SOLID_TIMER_GetCurrentTick();
@@ -64,22 +64,24 @@ static void wait_nsec(uint32_t nsec) {
  * @return int 0 if successful sleep, -1 if awoken by async event
  */
 int lf_sleep_until_locked(instant_t wakeup) {
+#ifndef LF_THREADED
     _lf_async_event = false;
-    //lf_critical_section_exit();
-
+    lf_critical_section_exit();
+#endif
     instant_t now;
     lf_clock_gettime(&now);
     interval_t sleep_duration = wakeup - now;
     if (sleep_duration < 0)
         return 0;
     wait_nsec(sleep_duration);
-
-    //lf_critical_section_enter();
+#ifndef LF_THREADED
+    lf_critical_section_enter();
 
     if (_lf_async_event) {
         _lf_async_event = false;
         return -1;
     }
+#endif
     return 0;
 }
 
