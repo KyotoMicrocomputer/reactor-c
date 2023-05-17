@@ -101,13 +101,11 @@ int lf_sleep(interval_t sleep_duration) {
     return 0;
 }
 
-void lf_initialize_clock()
-{
+void lf_initialize_clock() {
     _nw_nsecPerTick = (double)(1000000000.0 / (double)SOLID_TIMER_GetTicksPerSec());
 }
 
 int lf_clock_gettime(instant_t* t) {
-
     solid_cs_assert(t != NULL);
 
     *t = (instant_t)((double)SOLID_TIMER_GetCurrentTick() * _nw_nsecPerTick);
@@ -156,21 +154,18 @@ typedef void *(*lf_function_t) (void *);
  * @brief Get the number of cores on the host machine.
  */
 int lf_available_cores() {
-    // ToDo: Use SOLID API
-    return 2;
+    return TNUM_PRCID;
 }
 #endif
 
-void *calloc(size_t n, size_t size)
-{
+void *calloc(size_t n, size_t size) {
     void *mem = malloc(n * size);
     if (mem)
         memset(mem, 0, n * size);
     return mem;
 }
 
-int printf(const char *fmt, ...)
-{
+int printf(const char *fmt, ...) {
     char buf[1024];
     va_list ap;
     int ret;
@@ -215,8 +210,7 @@ void lf_print_debug(const char* format, ...) {
     SOLID_LOG_write(buf, ret);
 }
 
-void lf_print_log(const char *format, ...)
-{
+void lf_print_log(const char *format, ...) {
     char buf[1024];
     va_list ap;
 
