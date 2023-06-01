@@ -185,7 +185,7 @@ static const char *trace_event_names[] = {
 };
 
 // FIXME: Target property should specify the capacity of the trace buffer.
-#define TRACE_BUFFER_CAPACITY (2048 * 16)
+#define TRACE_BUFFER_CAPACITY 2048
 
 /** Size of the table of trace objects. */
 #define TRACE_OBJECT_TABLE_SIZE 1024
