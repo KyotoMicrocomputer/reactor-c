@@ -183,7 +183,7 @@ int printf(const char *fmt, ...) {
 
 #ifdef USE_NETLOGGER
     if (nl_is_initialized()) {
-        nl_printf(buf);
+        nl_printf("%s", buf);
         return ret;
     }
 #endif
@@ -204,7 +204,7 @@ void lf_print(const char *format, ...) {
 
 #ifdef USE_NETLOGGER
     if (nl_is_initialized()) {
-        nl_printf(buf);
+        nl_printf("%s", buf);
         return;
     }
 #endif
@@ -225,7 +225,7 @@ void lf_print_debug(const char* format, ...) {
 #ifdef USE_NETLOGGER
     if (nl_is_initialized()) {
         nl_printf("[DEBUG] ");
-        nl_printf(buf);
+        nl_printf("%s", buf);
         return;
     }
 #endif
@@ -247,7 +247,7 @@ void lf_print_log(const char *format, ...) {
 #ifdef USE_NETLOGGER
     if (nl_is_initialized()) {
         nl_printf("[LOG] ");
-        nl_printf(buf);
+        nl_printf("%s", buf);
         return;
     }
 #endif
