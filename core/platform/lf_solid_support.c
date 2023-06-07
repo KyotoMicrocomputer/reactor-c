@@ -33,8 +33,11 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <solid_mutex.h>
 #include <solid_timer.h>
 #include <solid_cs_assert.h>
+#include <solid_log.h>
 #include <kernel.h>
-
+#ifdef USE_NETLOGGER
+#include <netlogger.h>
+#endif
 #ifndef LF_THREADED
 // Keep track of physical actions being entered into the system
 static volatile bool _lf_async_event = false;
@@ -178,8 +181,13 @@ int printf(const char *fmt, ...) {
 
     buf[ret++] = '\0';
 
+#ifdef USE_NETLOGGER
+    if (nl_is_initialized()) {
+        nl_printf(buf);
+        return ret;
+    }
+#endif
     SOLID_LOG_write(buf, ret);
-
     return ret;
 }
 
@@ -194,6 +202,12 @@ void lf_print(const char *format, ...) {
     buf[ret++] = '\n';
     buf[ret++] = '\0';
 
+#ifdef USE_NETLOGGER
+    if (nl_is_initialized()) {
+        nl_printf(buf);
+        return;
+    }
+#endif
     SOLID_LOG_write(buf, ret);
 }
 
@@ -208,6 +222,13 @@ void lf_print_debug(const char* format, ...) {
     buf[ret++] = '\n';
     buf[ret++] = '\0';
 
+#ifdef USE_NETLOGGER
+    if (nl_is_initialized()) {
+        nl_printf("[DEBUG] ");
+        nl_printf(buf);
+        return;
+    }
+#endif
     SOLID_LOG_write("[DEBUG] ", 8);
     SOLID_LOG_write(buf, ret);
 }
@@ -223,6 +244,13 @@ void lf_print_log(const char *format, ...) {
     buf[ret++] = '\n';
     buf[ret++] = '\0';
 
+#ifdef USE_NETLOGGER
+    if (nl_is_initialized()) {
+        nl_printf("[LOG] ");
+        nl_printf(buf);
+        return;
+    }
+#endif
     SOLID_LOG_write("[LOG] ", 6);
     SOLID_LOG_write(buf, ret);
 }
